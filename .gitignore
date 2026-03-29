@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+fairprobe.db
+demo_candidates.json
+*.json
+firebase-credentials.json

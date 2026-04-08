@@ -224,14 +224,5 @@ MIT License — free to use, modify, and distribute.
 ---
 
 Built with by Team Assassin61 · GDG PromptWars 2026
-Now save this as README.md in your project root and push:
-powershellgit add README.md
-git commit -m "docs: add README"
-git push origin mainBut I still have to integrate the front end. So it's not totally ready. I'm going with the design you gave earlier7:34 AMAdd a status badge at the top so judges know it's in progress, and a roadmap section so it looks intentional, not incomplete.
-Add this right after the first tagline in the README, before "The Problem":
-markdown> **Status:** Backend complete · Frontend in development · Deadline April 15 2026
 
----
-And add this section before the License:
-markdown## Roadmap
 

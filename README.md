@@ -225,6 +225,6 @@ MIT License — free to use, modify, and distribute.
 
 ---
 
-Built with by Team Assassin61 · GDG PromptWars 2026
+Built with by Team Visionaries · GDG PromptWars 2026
 
 

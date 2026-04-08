@@ -69,6 +69,8 @@ In our hiring AI demo, FairProbe detected:
 ---
 
 ## Project Structure
+
+```
 fairprobe/
 ├── backend/
 │   ├── main.py              → FastAPI app, startup, routing
@@ -88,7 +90,7 @@ fairprobe/
 ├── fairprobe.config.yaml    → company customization file
 ├── .env                     → API keys (never committed)
 └── README.md
-
+```
 ---
 
 ## Quick Start

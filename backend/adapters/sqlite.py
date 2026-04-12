@@ -16,7 +16,6 @@ class SQLiteAdapter:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Applications table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +35,6 @@ class SQLiteAdapter:
             )
         """)
 
-        # Audit logs table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,7 +45,6 @@ class SQLiteAdapter:
             )
         """)
 
-        # Reports table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS reports (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,7 +62,6 @@ class SQLiteAdapter:
     def save(self, collection: str, record: dict):
         """
         Saves a record to the specified table.
-        collection = table name
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -76,6 +72,24 @@ class SQLiteAdapter:
 
         cursor.execute(
             f"INSERT INTO {collection} ({columns}) VALUES ({placeholders})",
+            values
+        )
+
+        conn.commit()
+        conn.close()
+
+    def update(self, collection: str, updates: dict, audit_id: str):
+        """
+        Updates fields in a record matching audit_id.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
+        values = list(updates.values()) + [audit_id]
+
+        cursor.execute(
+            f"UPDATE {collection} SET {set_clause} WHERE audit_id = ?",
             values
         )
 

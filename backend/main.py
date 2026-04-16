@@ -45,7 +45,7 @@ app.add_middleware(
         "https://YOUR_PROJECT_ID.web.app",
         "https://YOUR_PROJECT_ID.firebaseapp.com",
     ],
-    allow_origin_regex=r"^https://[a-zA-Z0-9-]+\.web\.app$|^https://[a-zA-Z0-9-]+\.firebaseapp\.com$",
+    allow_origin_regex=r"^https://[a-zA-Z0-9-]+\.web\.app$|^https://[a-zA-Z0-9-]+\.firebaseapp\.com$|^https://[a-zA-Z0-9-]+\.vercel\.app$",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,

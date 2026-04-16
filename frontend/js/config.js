@@ -10,4 +10,4 @@
  *     --region=us-central1 --format='value(status.url)'
  */
 
-window.FAIRPROBE_API_BASE = ''; // e.g. 'https://fairprobe-backend-abc123-uc.a.run.app'
+window.FAIRPROBE_API_BASE = 'https://fairprobe-backend-YOUR_PROJECT_ID.a.run.app'; // Replace with actual Cloud Run URL

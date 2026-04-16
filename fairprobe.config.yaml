@@ -37,8 +37,8 @@ thresholds:
 
 # Database configuration
 database:
-  type: "sqlite"
-  path: "./fairprobe.db"
+  type: "firebase"
+  project_id: "YOUR_PROJECT_ID"
 
 # AI configuration
 ai:

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FairProbe — AI Bias Auditing Platform</title>
+  <meta name="description" content="FairProbe detects hidden discrimination in AI hiring, lending, and healthcare decisions before it harms real people." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- ── Sidebar Navigation ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚖</div>
+      <div>
+        <div class="brand-name">FairProbe</div>
+        <div class="brand-sub">AI Bias Auditing</div>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li><a href="index.html" class="nav-link active" id="nav-dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </a></li>
+      <li><a href="audit.html" class="nav-link" id="nav-audit">
+        <span class="nav-icon">▷</span> Run / Upload
+      </a></li>
+      <li><a href="history.html" class="nav-link" id="nav-history">
+        <span class="nav-icon">◷</span> Audit History
+      </a></li>
+      <li><a href="report.html" class="nav-link" id="nav-report">
+        <span class="nav-icon">☰</span> Reports
+      </a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-label">Connecting…</span>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <main class="main" id="main">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Cumulative bias statistics across all audits</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="window.location.href='audit.html'">+ New Audit</button>
+      </div>
+    </header>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="no-data-banner" style="display:none">
+      <span>⚠</span>
+      No audit data found. <a href="audit.html" class="inline-link">Run your first audit</a> or <a href="audit.html#upload" class="inline-link">upload a dataset</a>.
+    </div>
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Applications</div>
+        <div class="kpi-value" id="kpi-total">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Acceptance Rate</div>
+        <div class="kpi-value" id="kpi-rate">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Audits Run</div>
+        <div class="kpi-value" id="kpi-audits">—</div>
+      </div>
+      <div class="kpi-card kpi-card--alert" id="kpi-bias-card">
+        <div class="kpi-label">Bias Status</div>
+        <div class="kpi-value" id="kpi-bias">—</div>
+      </div>
+    </section>
+
+    <!-- ── Charts Row ── -->
+    <section class="charts-row">
+      <!-- Donut: overall accepted vs rejected -->
+      <div class="chart-card">
+        <div class="chart-card-title">Overall Outcome</div>
+        <div class="chart-wrap chart-wrap--donut">
+          <canvas id="donut-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Horizontal Bar: acceptance rate per group -->
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card-title" id="bar-chart-title">Acceptance Rate by Group</div>
+        <div class="chart-wrap chart-wrap--bar">
+          <canvas id="bar-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Radar: bias disparity across dimensions -->
+      <div class="chart-card">
+        <div class="chart-card-title">Bias Radar</div>
+        <div class="chart-wrap chart-wrap--donut">
+          <canvas id="radar-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bias by Dimension -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Bias by Dimension</h2>
+        <div class="tab-group" id="dimension-tabs"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="stats-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Applications</th>
+              <th>Accepted</th>
+              <th>Acceptance Rate</th>
+              <th>vs Average</th>
+              <th>Bias Level</th>
+            </tr>
+          </thead>
+          <tbody id="stats-body">
+            <tr><td colspan="6" class="empty-row">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Latest Audit Quick Actions -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Latest Audit</h2>
+        <span class="badge badge-ghost" id="latest-audit-id">—</span>
+      </div>
+      <div class="action-grid" id="action-grid">
+        <button class="action-card" id="btn-analyse" onclick="runAction('analyse')">
+          <div class="action-icon">🔍</div>
+          <div class="action-title">Analyse Bias</div>
+          <div class="action-desc">AI interprets the statistics for discrimination patterns</div>
+        </button>
+        <button class="action-card" id="btn-report" onclick="runAction('report')">
+          <div class="action-icon">📋</div>
+          <div class="action-title">Generate Report</div>
+          <div class="action-desc">Formal compliance report with legal references</div>
+        </button>
+        <button class="action-card" id="btn-summarize" onclick="runAction('summarize')">
+          <div class="action-icon">💡</div>
+          <div class="action-title">Summarize</div>
+          <div class="action-desc">Plain English executive summary in under 150 words</div>
+        </button>
+      </div>
+      <div class="result-box" id="action-result" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

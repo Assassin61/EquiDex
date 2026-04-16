@@ -63,6 +63,11 @@ class SQLiteAdapter:
         """
         Saves a record to the specified table.
         """
+        import re
+        for key in record.keys():
+            if not re.match(r"^[a-zA-Z0-9_]+$", key):
+                raise ValueError(f"Invalid column name: {key}")
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -82,6 +87,11 @@ class SQLiteAdapter:
         """
         Updates fields in a record matching audit_id.
         """
+        import re
+        for key in updates.keys():
+            if not re.match(r"^[a-zA-Z0-9_]+$", key):
+                raise ValueError(f"Invalid column name: {key}")
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 

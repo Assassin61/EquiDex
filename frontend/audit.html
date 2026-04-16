@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Run Audit — FairProbe</title>
+  <meta name="description" content="Run a demo audit or upload your own dataset to detect AI bias." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚖</div>
+      <div>
+        <div class="brand-name">FairProbe</div>
+        <div class="brand-sub">AI Bias Auditing</div>
+      </div>
+    </div>
+    <ul class="nav-list">
+      <li><a href="index.html" class="nav-link">
+        <span class="nav-icon">◈</span> Dashboard
+      </a></li>
+      <li><a href="audit.html" class="nav-link active">
+        <span class="nav-icon">▷</span> Run / Upload
+      </a></li>
+      <li><a href="history.html" class="nav-link">
+        <span class="nav-icon">◷</span> Audit History
+      </a></li>
+      <li><a href="report.html" class="nav-link">
+        <span class="nav-icon">☰</span> Reports
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-label">Connecting…</span>
+    </div>
+  </nav>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Run / Upload Audit</h1>
+        <p class="page-sub">Use the demo hiring AI or bring your own dataset</p>
+      </div>
+    </header>
+
+    <!-- Mode Toggle -->
+    <div class="mode-toggle" id="mode-toggle">
+      <button class="mode-btn mode-btn--active" id="tab-demo" onclick="switchMode('demo')">
+        <span>▷</span> Run Demo Audit
+      </button>
+      <button class="mode-btn" id="tab-upload" onclick="switchMode('upload')">
+        <span>⬆</span> Upload Dataset
+      </button>
+    </div>
+
+    <!-- ── Demo Mode ── -->
+    <section class="card" id="panel-demo">
+      <div class="card-header">
+        <h2 class="card-title">Demo Hiring AI Audit</h2>
+        <span class="badge badge-warning">Simulated Bias</span>
+      </div>
+      <p class="card-desc">
+        Runs <strong>500 diverse candidates</strong> through a deliberately biased hiring AI. 
+        FairProbe then measures the discrimination it just caused — detecting name and age bias in real time.
+      </p>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Candidates</div>
+          <div class="info-val">500</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Hidden Penalties</div>
+          <div class="info-val">Name origin, Age</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Dimensions Audited</div>
+          <div class="info-val">3</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Expected Outcome</div>
+          <div class="info-val text-danger">HIGH Bias</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="btn-run-demo" onclick="runDemoAudit()">
+        <span id="run-icon">▷</span>
+        <span id="run-label">Run Demo Audit</span>
+      </button>
+
+      <div class="result-box" id="demo-result" style="display:none"></div>
+    </section>
+
+    <!-- ── Upload Mode ── -->
+    <section class="card" id="panel-upload" style="display:none">
+      <div class="card-header">
+        <h2 class="card-title">Upload Existing Dataset</h2>
+        <span class="badge badge-info">CSV or JSON</span>
+      </div>
+      <p class="card-desc">
+        Upload a file containing your existing application decisions. 
+        FairProbe will run its full bias analysis on your real-world data.
+      </p>
+
+      <!-- Format Guide -->
+      <div class="format-tabs">
+        <button class="fmt-tab fmt-tab--active" onclick="showFmt('csv')">CSV Format</button>
+        <button class="fmt-tab" onclick="showFmt('json')">JSON Format</button>
+      </div>
+
+      <div class="format-example" id="fmt-csv">
+        <div class="code-label">Required: <code>decision</code> column · Optional: name, age, ethnicity, experience, gpa, score</div>
+        <pre class="code-block">name,age,ethnicity,experience,gpa,decision,score
+James Smith,30,Caucasian,5,3.5,accepted,75
+Mohammed Hassan,28,Middle Eastern,5,3.5,rejected,44
+Lakisha Williams,27,African American,4,3.6,rejected,38
+Emily White,29,Caucasian,4,3.4,accepted,70</pre>
+      </div>
+
+      <div class="format-example" id="fmt-json" style="display:none">
+        <div class="code-label">Array of objects — same fields apply</div>
+        <pre class="code-block">[
+  {"name": "James Smith", "age": 30, "ethnicity": "Caucasian",
+   "experience": 5, "gpa": 3.5, "decision": "accepted", "score": 75},
+  {"name": "Mohammed Hassan", "age": 28, "ethnicity": "Middle Eastern",
+   "experience": 5, "gpa": 3.5, "decision": "rejected", "score": 44}
+]</pre>
+      </div>
+
+      <!-- Drop Zone -->
+      <div class="dropzone" id="dropzone"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event)"
+           onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">⬆</div>
+        <div class="drop-title">Drop your file here</div>
+        <div class="drop-sub">or click to browse · .csv or .json · max 10 MB</div>
+        <input type="file" id="file-input" accept=".csv,.json" style="display:none" onchange="handleFileSelect(event)" />
+      </div>
+
+      <!-- File Preview -->
+      <div class="file-preview" id="file-preview" style="display:none">
+        <div class="file-preview-header">
+          <div class="file-info">
+            <span class="file-icon">📄</span>
+            <div>
+              <div class="file-name" id="file-name"></div>
+              <div class="file-meta" id="file-meta"></div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearFile()">✕ Remove</button>
+        </div>
+        <!-- CSV Preview Table -->
+        <div id="csv-preview-wrap" style="display:none">
+          <div class="preview-label">Preview (first 5 rows)</div>
+          <div class="table-wrap">
+            <table class="data-table" id="preview-table">
+              <thead id="preview-head"></thead>
+              <tbody id="preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="btn-upload" onclick="uploadDataset()" disabled>
+        <span id="upload-icon">⬆</span>
+        <span id="upload-label">Upload & Analyse</span>
+      </button>
+
+      <div class="result-box" id="upload-result" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/audit.js"></script>
+</body>
+</html>

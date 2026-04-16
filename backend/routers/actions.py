@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException
 from backend.gemini import analyse_bias, generate_report, summarize_report
 from backend.stats import calculate_all_stats
+import json
+import datetime
 
 router = APIRouter(prefix="/action", tags=["Actions"])
 
@@ -20,8 +22,8 @@ async def analyse(audit_id: str, request: Request):
     # Save to reports table
     db.save("reports", {
         "audit_id": audit_id,
-        "timestamp": __import__("datetime").datetime.now().isoformat(),
-        "analysis": __import__("json").dumps(analysis),
+        "timestamp": datetime.datetime.now().isoformat(),
+        "analysis": json.dumps(analysis),
         "formal_report": "",
         "summary": ""
     })
@@ -49,8 +51,8 @@ async def report(audit_id: str, request: Request):
     else:
         db.save("reports", {
             "audit_id": audit_id,
-            "timestamp": __import__("datetime").datetime.now().isoformat(),
-            "analysis": __import__("json").dumps(analysis),
+            "timestamp": datetime.datetime.now().isoformat(),
+            "analysis": json.dumps(analysis),
             "formal_report": formal_report,
             "summary": ""
         })
@@ -79,8 +81,8 @@ async def summarize(audit_id: str, request: Request):
     else:
         db.save("reports", {
             "audit_id": audit_id,
-            "timestamp": __import__("datetime").datetime.now().isoformat(),
-            "analysis": __import__("json").dumps(analysis),
+            "timestamp": datetime.datetime.now().isoformat(),
+            "analysis": json.dumps(analysis),
             "formal_report": formal_report,
             "summary": summary
         })

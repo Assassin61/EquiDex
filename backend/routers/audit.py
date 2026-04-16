@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 from backend.demo_ai import run_batch
 from backend.stats import calculate_all_stats, filter_by_period
 import json
 import os
 import uuid
+import csv
+import io
 from datetime import datetime
 
 router = APIRouter(prefix="/audit", tags=["Audit"])
@@ -99,6 +101,142 @@ async def run_audit(request: Request):
         "total_processed": len(results),
         "status": "completed",
         "timestamp": timestamp
+    }
+
+
+ALLOWED_EXTENSIONS = {"csv", "json"}
+REQUIRED_FIELDS = {"decision"}
+VALID_DECISIONS = {"accepted", "rejected"}
+
+
+def _parse_upload(content: bytes, filename: str) -> list:
+    """
+    Parses uploaded file bytes into a list of candidate dicts.
+    Supports .csv and .json extensions.
+    Raises HTTPException on bad format or missing required fields.
+    """
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '.{ext}'. Upload a .csv or .json file."
+        )
+
+    records = []
+
+    if ext == "json":
+        try:
+            data = json.loads(content.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+        if not isinstance(data, list):
+            raise HTTPException(status_code=422, detail="JSON must be a list of objects.")
+        records = data
+
+    elif ext == "csv":
+        try:
+            text = content.decode("utf-8")
+            reader = csv.DictReader(io.StringIO(text))
+            records = [dict(row) for row in reader]
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=422, detail="CSV must be UTF-8 encoded.")
+
+    if not records:
+        raise HTTPException(status_code=422, detail="Uploaded file contains no records.")
+
+    # Validate required columns
+    sample_keys = set(records[0].keys())
+    missing = REQUIRED_FIELDS - sample_keys
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Missing required column(s): {missing}. Each record must have a 'decision' field."
+        )
+
+    return records
+
+
+@router.post("/upload")
+async def upload_dataset(request: Request, file: UploadFile = File(...)):
+    """
+    Upload an existing dataset (CSV or JSON) for bias analysis.
+
+    Required fields per record:
+      - decision: "accepted" or "rejected"
+
+    Optional fields (used in bias stats if present):
+      - name, age, ethnicity, experience, gpa, score
+    """
+    config = request.app.state.config
+    db = request.app.state.db
+
+    content = await file.read()
+    records = _parse_upload(content, file.filename)
+
+    audit_id = str(uuid.uuid4())[:8]
+    timestamp = datetime.now().isoformat()
+    saved = 0
+    skipped = 0
+
+    for record in records:
+        decision = str(record.get("decision", "")).strip().lower()
+        if decision not in VALID_DECISIONS:
+            skipped += 1
+            continue
+
+        # Safely coerce optional numeric fields
+        def safe_int(v, default=0):
+            try:
+                return int(float(v))
+            except (TypeError, ValueError):
+                return default
+
+        def safe_float(v, default=0.0):
+            try:
+                return round(float(v), 2)
+            except (TypeError, ValueError):
+                return default
+
+        db.save("applications", {
+            "audit_id": audit_id,
+            "name": str(record.get("name", "")).strip() or "Unknown",
+            "age": safe_int(record.get("age", 0)),
+            "ethnicity": str(record.get("ethnicity", "")).strip() or "Unknown",
+            "experience": safe_float(record.get("experience", 0)),
+            "gpa": safe_float(record.get("gpa", 0)),
+            "decision": decision,
+            "score": safe_float(record.get("score", 0)),
+            "timestamp": timestamp,
+            "source": "uploaded"
+        })
+        saved += 1
+
+    if saved == 0:
+        raise HTTPException(
+            status_code=422,
+            detail=f"No valid records found. All {skipped} rows had invalid 'decision' values. Use 'accepted' or 'rejected'."
+        )
+
+    db.save("audit_logs", {
+        "audit_id": audit_id,
+        "timestamp": timestamp,
+        "total_processed": saved,
+        "status": "completed"
+    })
+
+    return {
+        "audit_id": audit_id,
+        "total_processed": saved,
+        "skipped": skipped,
+        "source": "uploaded",
+        "filename": file.filename,
+        "status": "completed",
+        "timestamp": timestamp,
+        "next_steps": {
+            "stats": f"/audit/{audit_id}/stats",
+            "analyse": f"/action/analyse/{audit_id}",
+            "report": f"/action/report/{audit_id}"
+        }
     }
 
 

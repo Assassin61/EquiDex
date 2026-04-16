@@ -5,7 +5,8 @@ from pathlib import Path
 
 def _load_prompt(name: str) -> str:
     """Load prompt from prompts directory, return empty string if file is empty."""
-    prompt_path = Path(__file__).parent / "prompts" / f"{name}.txt"
+    safe_name = os.path.basename(name)
+    prompt_path = Path(__file__).parent / "prompts" / f"{safe_name}.txt"
     if prompt_path.exists():
         content = prompt_path.read_text().strip()
         if content:

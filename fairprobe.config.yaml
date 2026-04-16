@@ -68,6 +68,7 @@ demo:
 
 # Company Points System (for uploaded data scoring)
 company_point_system:
-  experience_multiplier: 10
-  gpa_multiplier: 20
+  multipliers:
+    experience: 10
+    gpa: 20
   passing_score: 60

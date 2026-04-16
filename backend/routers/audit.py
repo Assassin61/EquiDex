@@ -190,11 +190,14 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)):
         # If no decision provided, calculate natively via points system
         if not decision or decision not in VALID_DECISIONS:
             point_sys = config.get("company_point_system", {})
-            exp_mult = point_sys.get("experience_multiplier", 10)
-            gpa_mult = point_sys.get("gpa_multiplier", 20)
+            multipliers = point_sys.get("multipliers", {})
             passing = point_sys.get("passing_score", 60)
             
-            score = (experience * exp_mult) + (gpa * gpa_mult)
+            score = 0
+            for key, mult in multipliers.items():
+                val = safe_float(record.get(key, 0))
+                score += val * mult
+                
             decision = "accepted" if score >= passing else "rejected"
 
         db.save("applications", {

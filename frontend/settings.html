@@ -59,15 +59,11 @@
       <!-- Upload Points System -->
       <div class="settings-card">
         <h2 style="margin-bottom:1rem;color:#f0f4ff;">Upload Points System</h2>
-        <div class="form-group">
-          <label>Experience Multiplier</label>
-          <input type="number" id="cfg-exp-mult" />
+        <div id="dynamic-multipliers">
+          <!-- Populated by settings.js -->
         </div>
-        <div class="form-group">
-          <label>GPA Multiplier</label>
-          <input type="number" id="cfg-gpa-mult" />
-        </div>
-        <div class="form-group">
+        <button class="btn btn-ghost btn-sm" onclick="addMultiplierField()" style="margin-bottom:1rem;">+ Add Attribute Multiplier</button>
+        <div class="form-group" style="padding-top:1rem; border-top:1px solid var(--border);">
           <label>Passing Score</label>
           <input type="number" id="cfg-passing" />
           <small>Candidates scoring above this threshold are accepted.</small>

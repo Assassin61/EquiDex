@@ -368,3 +368,63 @@ function createSeverityDonut(canvasId, findings) {
   el._chartInstance = chart;
   return chart;
 }
+
+// ── 6. Trend Line Chart (Acceptance Rate Over Time) ─────────────────────────
+
+function createLineChart(canvasId, data) {
+  const el = document.getElementById(canvasId);
+  if (!el) return null;
+  if (el._chartInstance) el._chartInstance.destroy();
+
+  const labels = data.map(d => d.date);
+  const rates  = data.map(d => d.rate);
+
+  // Gradient fill under the line
+  const ctx = el.getContext('2d');
+  const gradient = makeGradient(ctx, COLORS.accent, 'vertical');
+
+  const chart = new Chart(el, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Acceptance Rate (%)',
+        data: rates,
+        backgroundColor: gradient,
+        borderColor: COLORS.accent,
+        borderWidth: 2,
+        pointBackgroundColor: COLORS.info,
+        pointBorderColor: '#0a0d14',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4 // smoothed curves
+      }],
+    },
+    options: {
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#8892aa' } },
+        y: {
+          min: 0,
+          max: 100,
+          grid: { color: '#1e2535' },
+          ticks: { color: '#8892aa', callback: v => `${v}%` },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` Acceptance Rate: ${ctx.raw}%`
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+
+  el._chartInstance = chart;
+  return chart;
+}

@@ -105,7 +105,7 @@ async def run_audit(request: Request):
 
 
 ALLOWED_EXTENSIONS = {"csv", "json"}
-REQUIRED_FIELDS = {"decision"}
+REQUIRED_FIELDS = set()
 VALID_DECISIONS = {"accepted", "rejected"}
 
 
@@ -113,7 +113,7 @@ def _parse_upload(content: bytes, filename: str) -> list:
     """
     Parses uploaded file bytes into a list of candidate dicts.
     Supports .csv and .json extensions.
-    Raises HTTPException on bad format or missing required fields.
+    Raises HTTPException on bad format.
     """
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
@@ -144,15 +144,6 @@ def _parse_upload(content: bytes, filename: str) -> list:
     if not records:
         raise HTTPException(status_code=422, detail="Uploaded file contains no records.")
 
-    # Validate required columns
-    sample_keys = set(records[0].keys())
-    missing = REQUIRED_FIELDS - sample_keys
-    if missing:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Missing required column(s): {missing}. Each record must have a 'decision' field."
-        )
-
     return records
 
 
@@ -161,11 +152,10 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)):
     """
     Upload an existing dataset (CSV or JSON) for bias analysis.
 
-    Required fields per record:
-      - decision: "accepted" or "rejected"
-
     Optional fields (used in bias stats if present):
-      - name, age, ethnicity, experience, gpa, score
+      - name, age, ethnicity, experience, gpa, score, decision
+      
+    If decision is omitted, it will be calculated using company_point_system config.
     """
     config = request.app.state.config
     db = request.app.state.db
@@ -179,11 +169,6 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)):
     skipped = 0
 
     for record in records:
-        decision = str(record.get("decision", "")).strip().lower()
-        if decision not in VALID_DECISIONS:
-            skipped += 1
-            continue
-
         # Safely coerce optional numeric fields
         def safe_int(v, default=0):
             try:
@@ -197,15 +182,30 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)):
             except (TypeError, ValueError):
                 return default
 
+        decision = str(record.get("decision", "")).strip().lower()
+        score = safe_float(record.get("score", 0))
+        experience = safe_float(record.get("experience", 0))
+        gpa = safe_float(record.get("gpa", 0))
+        
+        # If no decision provided, calculate natively via points system
+        if not decision or decision not in VALID_DECISIONS:
+            point_sys = config.get("company_point_system", {})
+            exp_mult = point_sys.get("experience_multiplier", 10)
+            gpa_mult = point_sys.get("gpa_multiplier", 20)
+            passing = point_sys.get("passing_score", 60)
+            
+            score = (experience * exp_mult) + (gpa * gpa_mult)
+            decision = "accepted" if score >= passing else "rejected"
+
         db.save("applications", {
             "audit_id": audit_id,
             "name": str(record.get("name", "")).strip() or "Unknown",
             "age": safe_int(record.get("age", 0)),
             "ethnicity": str(record.get("ethnicity", "")).strip() or "Unknown",
-            "experience": safe_float(record.get("experience", 0)),
-            "gpa": safe_float(record.get("gpa", 0)),
+            "experience": experience,
+            "gpa": gpa,
             "decision": decision,
-            "score": safe_float(record.get("score", 0)),
+            "score": score,
             "timestamp": timestamp,
             "source": "uploaded"
         })
@@ -214,7 +214,7 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)):
     if saved == 0:
         raise HTTPException(
             status_code=422,
-            detail=f"No valid records found. All {skipped} rows had invalid 'decision' values. Use 'accepted' or 'rejected'."
+            detail=f"No valid records found in file."
         )
 
     db.save("audit_logs", {

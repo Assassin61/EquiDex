@@ -34,6 +34,9 @@
       <li><a href="report.html" class="nav-link" id="nav-report">
         <span class="nav-icon">☰</span> Reports
       </a></li>
+      <li><a href="settings.html" class="nav-link" id="nav-settings">
+        <span class="nav-icon">⚙</span> Settings
+      </a></li>
     </ul>
 
     <div class="sidebar-footer">
@@ -104,6 +107,16 @@
         <div class="chart-card-title">Bias Radar</div>
         <div class="chart-wrap chart-wrap--donut">
           <canvas id="radar-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trend Line Chart -->
+    <section class="charts-row" style="margin-top:2rem;">
+      <div class="chart-card chart-card--wide" style="width: 100%;">
+        <div class="chart-card-title">Acceptance Rate Over Time</div>
+        <div class="chart-wrap chart-wrap--bar">
+          <canvas id="trend-line-chart"></canvas>
         </div>
       </div>
     </section>

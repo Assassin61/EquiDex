@@ -6,6 +6,7 @@ from backend.adapters.sqlite import SQLiteAdapter
 from backend.routers.audit import router as audit_router
 from backend.routers.actions import router as actions_router
 from backend.routers.stats import router as stats_router
+from backend.routers.config_router import router as config_router
 
 
 @asynccontextmanager
@@ -44,7 +45,7 @@ app.add_middleware(
         "https://YOUR_PROJECT_ID.web.app",
         "https://YOUR_PROJECT_ID.firebaseapp.com",
     ],
-    allow_origin_regex=r"https://.*\.web\.app|https://.*\.firebaseapp\.com",
+    allow_origin_regex=r"^https://[a-zA-Z0-9-]+\.web\.app$|^https://[a-zA-Z0-9-]+\.firebaseapp\.com$",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -53,6 +54,7 @@ app.add_middleware(
 app.include_router(audit_router)
 app.include_router(actions_router)
 app.include_router(stats_router)
+app.include_router(config_router)
 
 
 @app.get("/")

@@ -49,6 +49,35 @@ async function loadDashboard() {
       document.getElementById('no-data-banner').style.display = 'flex';
     }
 
+    // ── Trend Line Chart ────────────────────────────────────────────────
+    try {
+      const appsResponse = await apiGetAllApplications();
+      const apps = appsResponse.applications || [];
+      const groupedByDay = {};
+
+      apps.forEach(app => {
+        if (!app.timestamp) return;
+        const day = app.timestamp.substring(0, 10);
+        if (!groupedByDay[day]) groupedByDay[day] = { total: 0, accepted: 0 };
+        groupedByDay[day].total++;
+        if (app.decision === 'accepted') groupedByDay[day].accepted++;
+      });
+
+      const trendData = Object.keys(groupedByDay).sort().map(day => {
+        const d = groupedByDay[day];
+        return {
+          date: day,
+          rate: d.total > 0 ? parseFloat(((d.accepted / d.total) * 100).toFixed(1)) : 0
+        };
+      });
+
+      if (trendData.length > 0) {
+        createLineChart('trend-line-chart', trendData);
+      }
+    } catch (e) {
+      console.error('Failed to load trend line data', e);
+    }
+
     // ── Latest audit ────────────────────────────────────────────────────
     const latest = await apiGetLatestAudit();
     latestAuditId = latest.audit_id;

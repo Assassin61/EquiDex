@@ -88,8 +88,19 @@ async function apiGetDimensionStats(auditId, dimension) {
 
 // ── Shared UI helpers ────────────────────────────────────────────────────────
 
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function severityPill(sev) {
-  return `<span class="severity-pill severity-${sev}">${sev}</span>`;
+  const safeSev = escapeHTML(sev);
+  return `<span class="severity-pill severity-${safeSev}">${safeSev}</span>`;
 }
 
 function rateBar(rate) {
@@ -99,7 +110,7 @@ function rateBar(rate) {
   else if (pct < 60) color = '#f59e0b';
   return `
     <div class="rate-bar-wrap">
-      <span>${rate}%</span>
+      <span>${escapeHTML(rate)}%</span>
       <div class="rate-bar">
         <div class="rate-bar-fill" style="width:${pct}%;background:${color}"></div>
       </div>
@@ -109,28 +120,31 @@ function rateBar(rate) {
 function vsAvgCell(val) {
   const cls = val >= 0 ? 'text-success' : 'text-danger';
   const sign = val >= 0 ? '+' : '';
-  return `<span class="${cls} mono">${sign}${val}%</span>`;
+  return `<span class="${cls} mono">${sign}${escapeHTML(val)}%</span>`;
 }
 
 function buildStatsRows(rows) {
   if (!rows || !rows.length) {
     return '<tr><td colspan="6" class="empty-row">No data available</td></tr>';
   }
-  return rows.map(r => `
-    <tr class="row-${r.severity.toLowerCase()}">
-      <td><strong>${r.group}</strong></td>
-      <td class="mono">${r.total}</td>
-      <td class="mono">${r.accepted}</td>
+  return rows.map(r => {
+    const safeGroup = escapeHTML(r.group);
+    return `
+    <tr class="row-${escapeHTML(r.severity).toLowerCase()}">
+      <td><strong>${safeGroup}</strong></td>
+      <td class="mono">${escapeHTML(r.total)}</td>
+      <td class="mono">${escapeHTML(r.accepted)}</td>
       <td>${rateBar(r.acceptance_rate)}</td>
       <td>${vsAvgCell(r.vs_average)}</td>
       <td>${severityPill(r.severity)}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function buildDimensionTabs(dimensions, activeIdx, onClickFn) {
   return dimensions.map((dim, i) =>
     `<button class="tab-btn ${i === activeIdx ? 'active' : ''}"
-      onclick="${onClickFn}(${i})">${dim.replace('_', ' ')}</button>`
+      onclick="${escapeHTML(onClickFn)}(${i})">${escapeHTML(dim).replace('_', ' ')}</button>`
   ).join('');
 }
 

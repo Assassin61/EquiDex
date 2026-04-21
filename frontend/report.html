@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports — FairProbe</title>
+  <meta name="description" content="AI-generated bias analysis, compliance reports and executive summaries." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚖</div>
+      <div>
+        <div class="brand-name">FairProbe</div>
+        <div class="brand-sub">AI Bias Auditing</div>
+      </div>
+    </div>
+    <ul class="nav-list">
+      <li><a href="index.html" class="nav-link">
+        <span class="nav-icon">◈</span> Dashboard
+      </a></li>
+      <li><a href="audit.html" class="nav-link">
+        <span class="nav-icon">▷</span> Run / Upload
+      </a></li>
+      <li><a href="history.html" class="nav-link">
+        <span class="nav-icon">◷</span> Audit History
+      </a></li>
+      <li><a href="report.html" class="nav-link active">
+        <span class="nav-icon">☰</span> Reports
+      </a></li>
+      <li><a href="settings.html" class="nav-link">
+        <span class="nav-icon">⚙</span> Settings
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-label">Connecting…</span>
+    </div>
+  </nav>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-sub">AI-generated bias analysis and compliance documentation</p>
+      </div>
+    </header>
+
+    <!-- Audit Selector -->
+    <div class="card" style="padding:1.25rem 1.5rem; margin-bottom:1.5rem;">
+      <label class="form-label">Select Audit</label>
+      <div class="select-row">
+        <select class="form-select" id="audit-select">
+          <option value="">Loading audits…</option>
+        </select>
+        <button class="btn btn-primary" id="btn-load-report" onclick="loadReport()">Load Report</button>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="spinner-wrap" id="report-loading" style="display:none">
+      <div class="spinner"></div>
+      <p>Generating with AI… this may take 10–20 seconds</p>
+    </div>
+
+    <!-- Report Display -->
+    <div id="report-content" style="display:none">
+
+      <!-- Bias Analysis Findings -->
+      <section class="card" id="findings-section">
+        <div class="card-header">
+          <h2 class="card-title">🔍 Bias Analysis</h2>
+          <span class="badge" id="bias-badge"></span>
+        </div>
+        <p class="card-desc" id="analysis-summary"></p>
+
+        <!-- Findings Charts -->
+        <div class="charts-row charts-row--compact" id="findings-charts" style="display:none">
+          <div class="chart-card">
+            <div class="chart-card-title">Findings by Severity</div>
+            <div class="chart-wrap chart-wrap--donut">
+              <canvas id="severity-donut"></canvas>
+            </div>
+          </div>
+          <div class="chart-card chart-card--wide">
+            <div class="chart-card-title">Affected Dimensions</div>
+            <div class="chart-wrap chart-wrap--bar">
+              <canvas id="findings-bar"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div id="findings-list"></div>
+      </section>
+
+      <!-- Formal Report -->
+      <section class="card" id="formal-section">
+        <div class="card-header">
+          <h2 class="card-title">📋 Compliance Report</h2>
+          <button class="btn btn-ghost btn-sm" onclick="copyReport()">Copy</button>
+        </div>
+        <div class="report-text" id="formal-report-text"></div>
+      </section>
+
+      <!-- Summary -->
+      <section class="card" id="summary-section">
+        <div class="card-header">
+          <h2 class="card-title">💡 Executive Summary</h2>
+          <span class="badge badge-info">Plain English</span>
+        </div>
+        <blockquote class="summary-quote" id="summary-text"></blockquote>
+      </section>
+
+      <div class="report-actions">
+        <button class="btn btn-ghost" onclick="rerunActions()">↻ Regenerate All</button>
+      </div>
+    </div>
+
+    <!-- No report yet prompt -->
+    <div class="card empty-prompt" id="no-report-prompt">
+      <div class="empty-icon">📄</div>
+      <p>Select an audit above and click <strong>Load Report</strong>.<br/>If no report exists yet, FairProbe will generate one now.</p>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/report.js"></script>
+</body>
+</html>

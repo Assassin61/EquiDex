@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.db
+frontend/node_modules
+frontend/.next
+docs/
+test.py
+*.md

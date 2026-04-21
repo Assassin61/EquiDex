@@ -37,14 +37,13 @@ thresholds:
 
 # Database configuration
 database:
-  type: "sqlite"
-  path: "./fairprobe.db"
+  type: "firebase"
+  project_id: "YOUR_PROJECT_ID"
 
 # AI configuration
 ai:
-  provider: "gemini"
-  api_key: ""
-  model: "gemini-1.5-flash"
+  provider: "groq"          # change to "gemini" on demo day
+  model: "llama-3.3-70b-versatile"  # change to "gemini-2.5-flash" on demo day
 
 # Reporting
 reporting:
@@ -67,4 +66,9 @@ demo:
   name_bias_penalty: 30
   age_bias_penalty: 20
 
-
+# Company Points System (for uploaded data scoring)
+company_point_system:
+  multipliers:
+    experience: 10
+    gpa: 20
+  passing_score: 60

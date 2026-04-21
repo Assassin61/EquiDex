@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audit History — FairProbe</title>
+  <meta name="description" content="Browse all past FairProbe audits and jump into detailed bias reports." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚖</div>
+      <div>
+        <div class="brand-name">FairProbe</div>
+        <div class="brand-sub">AI Bias Auditing</div>
+      </div>
+    </div>
+    <ul class="nav-list">
+      <li><a href="index.html" class="nav-link">
+        <span class="nav-icon">◈</span> Dashboard
+      </a></li>
+      <li><a href="audit.html" class="nav-link">
+        <span class="nav-icon">▷</span> Run / Upload
+      </a></li>
+      <li><a href="history.html" class="nav-link active">
+        <span class="nav-icon">◷</span> Audit History
+      </a></li>
+      <li><a href="report.html" class="nav-link">
+        <span class="nav-icon">☰</span> Reports
+      </a></li>
+      <li><a href="settings.html" class="nav-link">
+        <span class="nav-icon">⚙</span> Settings
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-label">Connecting…</span>
+    </div>
+  </nav>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Audit History</h1>
+        <p class="page-sub">All past audits — click any row to view full stats</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="window.location.href='audit.html'">+ New Audit</button>
+      </div>
+    </header>
+
+    <div class="alert-banner" id="no-audits-banner" style="display:none">
+      <span>⚠</span>
+      No audits found. <a href="audit.html" class="inline-link">Run your first audit</a>.
+    </div>
+
+    <section class="section">
+      <div class="table-wrap">
+        <table class="data-table" id="history-table">
+          <thead>
+            <tr>
+              <th>Audit ID</th>
+              <th>Source</th>
+              <th>Applications</th>
+              <th>Acceptance Rate</th>
+              <th>Max Bias</th>
+              <th>Timestamp</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <tr><td colspan="7" class="empty-row">Loading audit history…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Inline Detail Panel -->
+    <section class="card" id="detail-panel" style="display:none">
+      <div class="card-header">
+        <h2 class="card-title">Audit <span id="detail-id"></span></h2>
+        <button class="btn btn-ghost btn-sm" onclick="closeDetail()">✕ Close</button>
+      </div>
+
+      <div class="tab-group" id="detail-dimension-tabs"></div>
+
+      <!-- Detail Charts -->
+      <div class="charts-row charts-row--compact" style="margin-top:1.25rem">
+        <div class="chart-card chart-card--wide">
+          <div class="chart-card-title">Accepted vs Rejected per Group</div>
+          <div class="chart-wrap chart-wrap--bar">
+            <canvas id="detail-stacked-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Acceptance Rate</div>
+          <div class="chart-wrap chart-wrap--bar">
+            <canvas id="detail-bar-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:1.25rem">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Applications</th>
+              <th>Accepted</th>
+              <th>Acceptance Rate</th>
+              <th>vs Average</th>
+              <th>Bias Level</th>
+            </tr>
+          </thead>
+          <tbody id="detail-stats-body">
+            <tr><td colspan="6" class="empty-row">Select an audit above</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="action-grid" style="margin-top:1.5rem">
+        <button class="action-card" onclick="runDetailAction('analyse')">
+          <div class="action-icon">🔍</div>
+          <div class="action-title">Analyse Bias</div>
+          <div class="action-desc">AI interprets these statistics</div>
+        </button>
+        <button class="action-card" onclick="runDetailAction('report')">
+          <div class="action-icon">📋</div>
+          <div class="action-title">Generate Report</div>
+          <div class="action-desc">Full compliance report</div>
+        </button>
+        <button class="action-card" onclick="runDetailAction('summarize')">
+          <div class="action-icon">💡</div>
+          <div class="action-title">Summarize</div>
+          <div class="action-desc">Executive plain-English summary</div>
+        </button>
+      </div>
+      <div class="result-box" id="detail-result" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

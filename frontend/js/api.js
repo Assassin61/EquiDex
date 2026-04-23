@@ -1,11 +1,11 @@
 /**
- * api.js — FairProbe API service layer
+ * api.js — EquiDex API service layer
  *
  * Single source of truth for the backend URL.
  * Change API_BASE to your Cloud Run URL before deploying.
  */
 
-const API_BASE = window.FAIRPROBE_API_BASE || 'http://127.0.0.1:8000';
+const API_BASE = window.EQUIDEX_API_BASE || 'http://127.0.0.1:8000';
 
 // ── Low-level fetch wrapper ─────────────────────────────────────────────────
 

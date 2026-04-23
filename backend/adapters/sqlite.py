@@ -63,6 +63,9 @@ class SQLiteAdapter:
         """
         Saves a record to the specified table.
         """
+        if collection not in ["applications", "audit_logs", "reports"]:
+            raise ValueError(f"Invalid collection name: {collection}")
+
         import re
         for key in record.keys():
             if not re.match(r"^[a-zA-Z0-9_]+$", key):
@@ -87,6 +90,9 @@ class SQLiteAdapter:
         """
         Updates fields in a record matching audit_id.
         """
+        if collection not in ["applications", "audit_logs", "reports"]:
+            raise ValueError(f"Invalid collection name: {collection}")
+
         import re
         for key in updates.keys():
             if not re.match(r"^[a-zA-Z0-9_]+$", key):
@@ -111,6 +117,9 @@ class SQLiteAdapter:
         Fetches all records from a table.
         Optionally filtered by audit_id.
         """
+        if collection not in ["applications", "audit_logs", "reports"]:
+            raise ValueError(f"Invalid collection name: {collection}")
+
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()

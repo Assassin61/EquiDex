@@ -1,54 +1,98 @@
-# FairProbe Cloud Setup Guide
+# EquiDex Cloud Setup Guide
 
-This guide covers everything you need to know about setting up a live, decoupled deployment of FairProbe on Google Cloud Platform (Backend & Firebase) and Vercel (Frontend).
+This guide covers deploying EquiDex with **Firebase Hosting** (frontend) + **Google Cloud Run** (backend) + **Firebase Firestore** (database).
 
 ## Prerequisites
-Before you start, you'll need the following:
-1. A **Google Cloud Platform (GCP)** Account.
-2. A **Vercel** Account.
-3. A connected GitHub Repository natively hosting the FairProbe source code (we've pushed the code to the `demo-site` branch!).
+1. A **Google Cloud Platform (GCP)** account with a project created.
+2. **Firebase CLI** installed (`npm install -g firebase-tools`).
+3. **gcloud CLI** installed and authenticated.
+4. A connected GitHub repository with the EquiDex source code.
 
 ---
 
-## Part 1: Setting up the Firebase Database
-Because FairProbe audits complex structures seamlessly over Google Cloud, we map the database structure directly to Firebase Firestore.
+## Part 1: Setting up the Firebase Database (Firestore)
 
 1. Navigate to your [Google Cloud Console](https://console.cloud.google.com).
-2. Look for **Firebase / Firestore** in the project navigation elements. 
-3. Initialize a **Firestore Database** choosing **Native Mode**.
-4. Retrieve your Google Cloud **Project ID** from the upper-left dropdown on the console menu.
-5. In your local FairProbe source code, open the file `fairprobe.config.yaml` and swap out the placeholder property string `"YOUR_PROJECT_ID"` inside the `database` section with your actual Project ID token.
-6. Commit the final replacement string to sync your repository.
+2. Open **Firestore** and create a database in **Native Mode**.
+3. Copy your GCP **Project ID** from the console.
+4. In `fairprobe.config.yaml`, update the `database` section:
+   ```yaml
+   database:
+     type: "firebase"
+     project_id: "YOUR_PROJECT_ID"
+   ```
+5. In `.firebaserc`, replace `YOUR_PROJECT_ID` with your actual project ID.
+6. Commit and push.
 
 ---
 
 ## Part 2: Deploying the Backend on Google Cloud Run
-The backend is a dynamic API structure running entirely decoupled from frontend storage capabilities.
 
-Since your terminal handles the logic configuration, you can use the `gcloud CLI` directly. 
-
-1. Install Google Cloud SDK (`gcloud`) if you haven't yet, and authenticate using:
+1. Authenticate with gcloud:
    ```bash
    gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
    ```
-2. Navigate directly into the local `/fairprobe` codebase via your internal system terminal.
-3. Establish your deployment command indicating the unauthenticated, publicly visible application mapping:
+
+2. Set your Gemini API key as a secret:
    ```bash
-   gcloud run deploy fairprobe-backend --source . --region us-central1 --allow-unauthenticated
+   gcloud run deploy equidex-backend \
+     --source . \
+     --region us-central1 \
+     --allow-unauthenticated \
+     --set-env-vars GEMINI_API_KEY=your_key_here
    ```
-4. Once the process completes, GCP will supply you with a newly generated URL referencing your backend route (E.g. *https://fairprobe-backend-XXXXX-uc.a.run.app*).
-5. Open your codebase one final time and insert that custom route URL explicitly into the `window.FAIRPROBE_API_BASE` string assignment inside `frontend/js/config.js`!
-6. Commit the frontend parameter mapping back up to the `demo-site` branch using git.
+
+3. After deployment, copy the generated URL (e.g. `https://equidex-backend-XXXXX-uc.a.run.app`).
+
+4. Update `frontend/js/config.js` with your backend URL:
+   ```js
+   window.EQUIDEX_API_BASE = 'https://equidex-backend-XXXXX-uc.a.run.app';
+   ```
+
+5. Also add your Firebase Hosting domain to the CORS origins in `backend/main.py`:
+   ```python
+   allow_origins=[
+       "https://YOUR_PROJECT_ID.web.app",
+       "https://YOUR_PROJECT_ID.firebaseapp.com",
+   ]
+   ```
 
 ---
 
-## Part 3: Deploying the Frontend on Vercel
-Vercel handles all local environment UI parsing and HTML generation statically from the repo out-of-the-box via the `vercel.json` structure we've generated natively.
+## Part 3: Deploying the Frontend on Firebase Hosting
 
-1. Open up the [Vercel Deployment Dashboard](https://vercel.com/new).
-2. Select **"Import Git Repository"** and select the FairProbe repository you pushed earlier today.
-3. Under the **"Branch to Deploy"** tab, verify and confirm the selection of branch `demo-site`.
-4. Leave Vercel settings implicitly untouched! The platform will scan and interpret your mapped `vercel.json` pointing automatically at your `/frontend` folder endpoints.
-5. Click **Deploy**.
+The `firebase.json` is already configured to serve from the `frontend/` directory.
 
-It's that simple! Once Vercel indicates a green marker completion state, the link to your custom frontend URL acts as the centralized point for your deployed web platform.
+1. Login to Firebase:
+   ```bash
+   firebase login
+   ```
+
+2. Deploy:
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+3. Your frontend will be live at `https://YOUR_PROJECT_ID.web.app`.
+
+---
+
+## Alternative: Frontend on Vercel
+
+If you prefer Vercel over Firebase Hosting, the `vercel.json` is also configured.
+
+1. Go to [vercel.com/new](https://vercel.com/new) and import your repository.
+2. Select the branch to deploy (e.g. `main` or `demo-site`).
+3. Vercel will detect `vercel.json` and serve the `frontend/` directory automatically.
+4. Click **Deploy**.
+
+> **Note:** If using Vercel for the frontend, add your Vercel URL to the CORS origins in `backend/main.py`.
+
+---
+
+## TLS / HTTPS
+
+Both Firebase Hosting and Vercel automatically provide TLS certificates (HTTPS) for your deployed sites. Google Cloud Run also serves over HTTPS by default. **No manual TLS configuration is needed for production.**
+
+For local development, the app runs over plain HTTP on `http://127.0.0.1:8000` (backend) and `http://127.0.0.1:3000` (frontend). Self-signed certificates for local HTTPS can be generated using `python generate_cert.py` if needed.

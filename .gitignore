@@ -1,7 +1,11 @@
 .env
 __pycache__/
 *.pyc
+firebase-credentials.json
+venv/
+cert.pem
+key.pem
+generate_cert.py
 fairprobe.db
 demo_candidates.json
-*.json
-firebase-credentials.json
+*.webp

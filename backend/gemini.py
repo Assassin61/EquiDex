@@ -17,7 +17,16 @@ def _load_prompt(name: str) -> str:
 def call_groq(prompt: str, system: str = None) -> str:
     """Call Groq API with the configured model."""
     from groq import Groq
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY is not set. "
+            "Create a .env file in the project root with: GROQ_API_KEY=your_key_here  "
+            "Get a free key at https://console.groq.com/keys"
+        )
+        
+    client = Groq(api_key=api_key)
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -45,17 +54,59 @@ async def call_gemini(prompt: str, system: str = None) -> str:
     return response.text
 
 
+def call_ollama(prompt: str, config: dict, system: str = None) -> str:
+    """Call a local Ollama model."""
+    import httpx
+    
+    model_name = config.get("ai", {}).get("model", "llama3.1")
+    url = "http://localhost:11434/api/chat"
+    
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": model_name,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": 0.3
+        }
+    }
+    
+    try:
+        # Use a longer timeout for local models since they can be slow to generate/load
+        with httpx.Client(timeout=120.0) as client:
+            response = client.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data["message"]["content"]
+    except Exception as e:
+        raise RuntimeError(f"Failed to connect to local Ollama (is it running?): {str(e)}")
+
+
 def call_ai(prompt: str, config: dict, system: str = None) -> str:
     """
-    Config-driven AI call. Routes to Groq or Gemini
+    Config-driven AI call. Routes to Groq, Gemini, or Ollama
     based on config['ai']['provider'].
     """
-    provider = config.get("ai", {}).get("provider", "groq")
+    provider = config.get("ai", {}).get("provider", "gemini")
 
-    if provider == "gemini":
-        # Gemini is async but we need sync here — use the sync wrapper
+    if provider == "ollama":
+        return call_ollama(prompt, config, system)
+    elif provider == "gemini":
         import google.generativeai as genai
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is not set. "
+                "Create a .env file in the project root with: GEMINI_API_KEY=your_key_here  "
+                "Get a free key at https://aistudio.google.com/app/apikey"
+            )
+
+        genai.configure(api_key=api_key)
 
         model_name = config.get("ai", {}).get("model", "gemini-2.5-flash")
         model = genai.GenerativeModel(
@@ -182,5 +233,5 @@ Report:
     if config:
         return call_ai(prompt, config, system)
     else:
-        # Fallback to Groq if no config provided
-        return call_groq(prompt, system)
+        # Fallback to Gemini if no config provided
+        return call_ai(prompt, {}, system)

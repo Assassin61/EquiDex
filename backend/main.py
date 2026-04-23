@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +17,7 @@ from backend.routers.config_router import router as config_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown lifecycle for FairProbe."""
+    """Startup and shutdown lifecycle for EquiDex."""
     config = load_config()
     app.state.config = config
 
@@ -23,14 +29,14 @@ async def lifespan(app: FastAPI):
     else:
         app.state.db = SQLiteAdapter(config)
 
-    print(f"FairProbe started successfully (db={db_type})")
+    print(f"EquiDex started successfully (db={db_type})")
     yield
 
 
 app = FastAPI(
-    title="FairProbe",
-    description="AI Bias Auditing Platform",
-    version="1.0.0",
+    title="EquiDex",
+    description="AI Bias Auditing Platform — Equity Index for Algorithmic Decisions",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -39,6 +45,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://localhost:3000",
+        "https://127.0.0.1:3000",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
         # Firebase Hosting — replace YOUR_PROJECT_ID with your actual project
@@ -61,6 +69,7 @@ app.include_router(config_router)
 async def root():
     return {
         "status": "running",
-        "product": "FairProbe",
-        "version": "1.0.0"
+        "product": "EquiDex",
+        "version": "2.0.0",
+        "tls": True
     }

@@ -1,5 +1,5 @@
 /**
- * charts.js — FairProbe shared Chart.js utilities
+ * charts.js — EquiDex shared Chart.js utilities
  * Uses Chart.js 4.x loaded via CDN
  */
 
@@ -22,7 +22,18 @@ const COLORS = {
   danger:  '#ef4444',
   info:    '#38bdf8',
   muted:   '#505a72',
+  teal:    '#14b8a6',
+  rose:    '#f43f5e',
+  amber:   '#f59e0b',
+  sky:     '#0ea5e9',
 };
+
+// A palette of distinct colors for multi-group charts
+const GROUP_PALETTE = [
+  '#4f6ef7', '#7c3aed', '#22c55e', '#f59e0b', '#ef4444',
+  '#38bdf8', '#14b8a6', '#f43f5e', '#a855f7', '#06b6d4',
+  '#84cc16', '#e879f9', '#fb923c', '#34d399', '#f472b6',
+];
 
 const SEV_COLOR = {
   HIGH:   COLORS.danger,
@@ -85,7 +96,7 @@ const centerTextPlugin = {
 
 Chart.register(centerTextPlugin);
 
-// ── 1. Donut Chart (Accepted vs Rejected) ─────────────────────────────────────
+// ── 1. Doughnut Chart (Accepted vs Rejected — center shows %) ────────────────
 
 function createDonutChart(canvasId, accepted, total) {
   const el = document.getElementById(canvasId);
@@ -94,7 +105,6 @@ function createDonutChart(canvasId, accepted, total) {
   const rejected = total - accepted;
   const rate     = total ? Math.round((accepted / total) * 100) : 0;
 
-  // Destroy prior instance if it exists
   if (el._chartInstance) el._chartInstance.destroy();
 
   const chart = new Chart(el, {
@@ -102,7 +112,7 @@ function createDonutChart(canvasId, accepted, total) {
     _centerText: {
       line1:  `${rate}%`,
       line2:  'Acceptance',
-      color1: '#f0f4ff',
+      color1: rate >= 60 ? COLORS.success : rate >= 35 ? COLORS.warning : COLORS.danger,
       color2: '#8892aa',
     },
     data: {
@@ -111,24 +121,28 @@ function createDonutChart(canvasId, accepted, total) {
         data: [accepted, rejected],
         backgroundColor: [
           alpha(COLORS.success, 0.85),
-          alpha(COLORS.danger,  0.75),
+          alpha(COLORS.danger,  0.65),
         ],
         borderColor: [
           COLORS.success,
           COLORS.danger,
         ],
         borderWidth: 2,
-        hoverOffset: 8,
+        hoverOffset: 10,
       }],
     },
     options: {
       cutout: '72%',
-      animation: { animateRotate: true, duration: 700, easing: 'easeOutQuart' },
+      animation: { animateRotate: true, duration: 900, easing: 'easeOutQuart' },
       plugins: {
-        legend: { position: 'bottom' },
+        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } },
         tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
+          titleFont: { weight: '600' },
           callbacks: {
-            label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw / total * 100)}%)`,
+            label: (ctx) => ` ${ctx.label}: ${ctx.raw.toLocaleString()} (${Math.round(ctx.raw / total * 100)}%)`,
           },
         },
       },
@@ -169,7 +183,7 @@ function createBarChart(canvasId, rows) {
     },
     options: {
       indexAxis: 'y',
-      animation: { duration: 600, easing: 'easeOutQuart' },
+      animation: { duration: 700, easing: 'easeOutQuart' },
       scales: {
         x: {
           min: 0,
@@ -185,6 +199,9 @@ function createBarChart(canvasId, rows) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
           callbacks: {
             label: (ctx) => {
               const row = rows[ctx.dataIndex];
@@ -235,7 +252,7 @@ function createStackedBarChart(canvasId, rows) {
         {
           label: 'Rejected',
           data: rejected,
-          backgroundColor: alpha(COLORS.danger, 0.65),
+          backgroundColor: alpha(COLORS.danger, 0.55),
           borderColor: COLORS.danger,
           borderWidth: 1.5,
           stack: 's',
@@ -243,14 +260,19 @@ function createStackedBarChart(canvasId, rows) {
       ],
     },
     options: {
-      animation: { duration: 600, easing: 'easeOutQuart' },
+      animation: { duration: 700, easing: 'easeOutQuart' },
       scales: {
         x: { grid: { display: false }, ticks: { font: { weight: '600' } } },
-        y: { grid: { color: '#1e2535' }, stacked: true },
+        y: { grid: { color: '#1e2535' }, stacked: true, ticks: { precision: 0 } },
       },
       plugins: {
-        legend: { position: 'top' },
-        tooltip: { mode: 'index' },
+        legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+        tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
+          mode: 'index',
+        },
       },
       responsive: true,
       maintainAspectRatio: false,
@@ -261,7 +283,7 @@ function createStackedBarChart(canvasId, rows) {
   return chart;
 }
 
-// ── 4. Radar Chart — severity across all dimensions ──────────────────────────
+// ── 4. Polar Area Chart — bias disparity across dimensions ───────────────────
 
 function createRadarChart(canvasId, dimensionsData) {
   const el = document.getElementById(canvasId);
@@ -276,40 +298,58 @@ function createRadarChart(canvasId, dimensionsData) {
     return rows.length ? Math.max(...rows.map(r => Math.abs(r.vs_average))) : 0;
   });
 
+  // Color each sector by severity level, using distinct hues
+  const sectorColors = maxDisparity.map(v =>
+    v >= 30 ? COLORS.danger : v >= 15 ? COLORS.warning : COLORS.success
+  );
+
   const chart = new Chart(el, {
-    type: 'radar',
+    type: 'polarArea',
     data: {
-      labels: labels.map(l => l.replace('_', ' ')),
+      labels: labels.map(l => l.replace(/_/g, ' ')),
       datasets: [{
-        label: 'Max Bias Disparity (%)',
+        label: 'Max Disparity (%)',
         data: maxDisparity,
-        fill: true,
-        backgroundColor: alpha(COLORS.accent, 0.2),
-        borderColor: COLORS.accent,
-        pointBackgroundColor: maxDisparity.map(v => v >= 30 ? COLORS.danger : v >= 15 ? COLORS.warning : COLORS.success),
-        pointBorderColor: '#0a0d14',
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        backgroundColor: sectorColors.map(c => alpha(c, 0.55)),
+        borderColor: sectorColors,
         borderWidth: 2,
       }],
     },
     options: {
-      animation: { duration: 700 },
+      animation: { duration: 900, easing: 'easeOutQuart' },
       scales: {
         r: {
           min: 0,
           suggestedMax: 50,
-          angleLines:    { color: '#1e2535' },
-          grid:          { color: '#1e2535' },
-          pointLabels:   { color: '#8892aa', font: { size: 12, weight: '600' } },
-          ticks:         { color: '#505a72', backdropColor: 'transparent', callback: v => `${v}%` },
+          grid: { color: '#1e2535' },
+          ticks: {
+            color: '#505a72',
+            backdropColor: 'transparent',
+            callback: v => `${v}%`,
+            stepSize: 10,
+          },
         },
       },
       plugins: {
-        legend: { display: false },
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#a0aec0',
+            padding: 14,
+            usePointStyle: true,
+            pointStyle: 'rectRounded',
+            font: { size: 11, weight: '600' },
+          },
+        },
         tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
           callbacks: {
-            label: ctx => ` Max disparity: ${ctx.raw}%`,
+            label: ctx => {
+              const sev = ctx.raw >= 30 ? 'HIGH' : ctx.raw >= 15 ? 'MEDIUM' : 'LOW';
+              return ` Disparity: ${ctx.raw}%  (${sev})`;
+            },
           },
         },
       },
@@ -358,7 +398,7 @@ function createSeverityDonut(canvasId, findings) {
       cutout: '68%',
       animation: { duration: 700 },
       plugins: {
-        legend: { position: 'right' },
+        legend: { position: 'right', labels: { usePointStyle: true, pointStyle: 'circle' } },
       },
       responsive: true,
       maintainAspectRatio: true,
@@ -381,7 +421,9 @@ function createLineChart(canvasId, data) {
 
   // Gradient fill under the line
   const ctx = el.getContext('2d');
-  const gradient = makeGradient(ctx, COLORS.accent, 'vertical');
+  const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+  gradient.addColorStop(0, alpha(COLORS.accent, 0.4));
+  gradient.addColorStop(1, alpha(COLORS.accent, 0.02));
 
   const chart = new Chart(el, {
     type: 'line',
@@ -392,31 +434,93 @@ function createLineChart(canvasId, data) {
         data: rates,
         backgroundColor: gradient,
         borderColor: COLORS.accent,
-        borderWidth: 2,
-        pointBackgroundColor: COLORS.info,
-        pointBorderColor: '#0a0d14',
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        borderWidth: 2.5,
+        pointBackgroundColor: COLORS.accent,
+        pointBorderColor: '#111520',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 8,
         fill: true,
-        tension: 0.4 // smoothed curves
+        tension: 0.4
       }],
     },
     options: {
-      animation: { duration: 800, easing: 'easeOutQuart' },
+      animation: { duration: 900, easing: 'easeOutQuart' },
       scales: {
-        x: { grid: { display: false }, ticks: { color: '#8892aa' } },
+        x: { grid: { display: false }, ticks: { color: '#8892aa', maxRotation: 0 } },
         y: {
           min: 0,
           max: 100,
           grid: { color: '#1e2535' },
-          ticks: { color: '#8892aa', callback: v => `${v}%` },
+          ticks: { color: '#8892aa', callback: v => `${v}%`, stepSize: 20 },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
           callbacks: {
             label: ctx => ` Acceptance Rate: ${ctx.raw}%`
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+
+  el._chartInstance = chart;
+  return chart;
+}
+
+// ── 7. Vertical Bar Chart (Applications Received) ───────────────────────────
+
+function createAppsBarChart(canvasId, rows) {
+  const el = document.getElementById(canvasId);
+  if (!el) return null;
+  if (el._chartInstance) el._chartInstance.destroy();
+
+  const labels = rows.map(r => r.group);
+  const totals = rows.map(r => r.total);
+  const bgs    = labels.map((_, i) => alpha(GROUP_PALETTE[i % GROUP_PALETTE.length], 0.75));
+  const borders = labels.map((_, i) => GROUP_PALETTE[i % GROUP_PALETTE.length]);
+
+  const chart = new Chart(el, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Applications Received',
+        data: totals,
+        backgroundColor: bgs,
+        borderColor: borders,
+        borderWidth: 1.5,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: '#1e2535' },
+          ticks: { precision: 0, color: '#8892aa' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#8892aa', font: { weight: '600' } }
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111520',
+          borderColor: '#252d40',
+          borderWidth: 1,
+          callbacks: {
+            label: (ctx) => ` Applications: ${ctx.raw.toLocaleString()}`
           }
         }
       },

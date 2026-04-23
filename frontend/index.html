@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairProbe — AI Bias Auditing Platform</title>
-  <meta name="description" content="FairProbe detects hidden discrimination in AI hiring, lending, and healthcare decisions before it harms real people." />
+  <title>EquiDex — AI Bias Auditing Platform</title>
+  <meta name="description" content="EquiDex detects hidden discrimination in AI hiring, lending, and healthcare decisions before it harms real people." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
@@ -16,7 +16,7 @@
     <div class="sidebar-brand">
       <div class="brand-icon">⚖</div>
       <div>
-        <div class="brand-name">FairProbe</div>
+        <div class="brand-name">EquiDex</div>
         <div class="brand-sub">AI Bias Auditing</div>
       </div>
     </div>
@@ -54,6 +54,7 @@
         <p class="page-sub">Cumulative bias statistics across all audits</p>
       </div>
       <div class="topbar-actions">
+        <span class="badge badge-accent" id="tls-badge" style="display:none">🔒 TLS Encrypted</span>
         <button class="btn btn-ghost" onclick="window.location.href='audit.html'">+ New Audit</button>
       </div>
     </header>
@@ -84,39 +85,51 @@
       </div>
     </section>
 
-    <!-- ── Charts Row ── -->
-    <section class="charts-row">
-      <!-- Donut: overall accepted vs rejected -->
+    <!-- ── Row 1: Doughnut (acceptance rate) + Horizontal Bar (acceptance by group) ── -->
+    <section class="charts-row" style="grid-template-columns: 1fr 2fr;">
       <div class="chart-card">
-        <div class="chart-card-title">Overall Outcome</div>
+        <div class="chart-card-title">Overall Acceptance Rate</div>
         <div class="chart-wrap chart-wrap--donut">
           <canvas id="donut-chart"></canvas>
         </div>
       </div>
 
-      <!-- Horizontal Bar: acceptance rate per group -->
       <div class="chart-card chart-card--wide">
         <div class="chart-card-title" id="bar-chart-title">Acceptance Rate by Group</div>
         <div class="chart-wrap chart-wrap--bar">
           <canvas id="bar-chart"></canvas>
         </div>
       </div>
+    </section>
 
-      <!-- Radar: bias disparity across dimensions -->
-      <div class="chart-card">
-        <div class="chart-card-title">Bias Radar</div>
-        <div class="chart-wrap chart-wrap--donut">
-          <canvas id="radar-chart"></canvas>
+    <!-- ── Row 2: Applications Bar + Stacked Accepted/Rejected ── -->
+    <section class="charts-row" style="grid-template-columns: 1fr 1fr;">
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card-title" id="apps-bar-chart-title">Applications Received by Group</div>
+        <div class="chart-wrap chart-wrap--bar">
+          <canvas id="apps-bar-chart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card-title" id="stacked-chart-title">Accepted vs Rejected by Group</div>
+        <div class="chart-wrap chart-wrap--bar">
+          <canvas id="stacked-bar-chart"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- Trend Line Chart -->
-    <section class="charts-row" style="margin-top:2rem;">
-      <div class="chart-card chart-card--wide" style="width: 100%;">
+    <!-- ── Row 3: Trend Line + Radar ── -->
+    <section class="charts-row" style="grid-template-columns: 2fr 1fr;">
+      <div class="chart-card chart-card--wide">
         <div class="chart-card-title">Acceptance Rate Over Time</div>
         <div class="chart-wrap chart-wrap--bar">
           <canvas id="trend-line-chart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Bias Disparity by Dimension</div>
+        <div class="chart-wrap chart-wrap--donut">
+          <canvas id="radar-chart"></canvas>
         </div>
       </div>
     </section>

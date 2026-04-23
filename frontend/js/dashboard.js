@@ -1,5 +1,5 @@
 /**
- * dashboard.js — FairProbe Dashboard page
+ * dashboard.js — EquiDex Dashboard page
  */
 
 let dashDimensions = [];
@@ -16,6 +16,12 @@ async function loadDashboard() {
     const data    = await apiGetAllStats();
     const overall = data.stats?.overall || {};
 
+    // ── Show TLS badge if using HTTPS ────────────────────────────────
+    if (API_BASE.startsWith('https://')) {
+      const tlsBadge = document.getElementById('tls-badge');
+      if (tlsBadge) tlsBadge.style.display = 'inline-flex';
+    }
+
     // ── KPI Cards ──────────────────────────────────────────────────────
     document.getElementById('kpi-total').textContent =
       overall.total_applications?.toLocaleString() ?? '0';
@@ -31,13 +37,15 @@ async function loadDashboard() {
     biasEl.className   = `kpi-value text-${sevToClass(maxSev)}`;
     document.getElementById('kpi-bias-card').style.borderColor = sevToBorderColor(maxSev);
 
-    // ── Charts ──────────────────────────────────────────────────────────
+    // ── Doughnut Chart (overall acceptance) ──────────────────────────
     const accepted = overall.total_accepted ?? 0;
     const total    = overall.total_applications ?? 0;
     createDonutChart('donut-chart', accepted, total);
+
+    // ── Radar Chart ─────────────────────────────────────────────────
     createRadarChart('radar-chart', data.stats?.dimensions ?? {});
 
-    // ── Dimension tabs & bar chart ──────────────────────────────────────
+    // ── Dimension tabs & charts ─────────────────────────────────────
     dashDimensions = Object.keys(data.stats?.dimensions ?? {});
     dashStats      = data.stats?.dimensions ?? {};
 
@@ -49,7 +57,7 @@ async function loadDashboard() {
       document.getElementById('no-data-banner').style.display = 'flex';
     }
 
-    // ── Trend Line Chart ────────────────────────────────────────────────
+    // ── Trend Line Chart ────────────────────────────────────────────
     try {
       const appsResponse = await apiGetAllApplications();
       const apps = appsResponse.applications || [];
@@ -78,7 +86,7 @@ async function loadDashboard() {
       console.error('Failed to load trend line data', e);
     }
 
-    // ── Latest audit ────────────────────────────────────────────────────
+    // ── Latest audit ────────────────────────────────────────────────
     const latest = await apiGetLatestAudit();
     latestAuditId = latest.audit_id;
     const auditBadge = document.getElementById('latest-audit-id');
@@ -112,9 +120,22 @@ function renderStatsTable(idx) {
 function renderBarChart(idx) {
   const dim  = dashDimensions[idx];
   const rows = dashStats[dim] ?? [];
+  const dimLabel = dim.replace(/_/g, ' ');
+
+  // Horizontal bar — acceptance rate
   const titleEl = document.getElementById('bar-chart-title');
-  if (titleEl) titleEl.textContent = `Acceptance Rate — ${dim.replace('_', ' ')}`;
+  if (titleEl) titleEl.textContent = `Acceptance Rate — ${dimLabel}`;
   createBarChart('bar-chart', rows);
+
+  // Vertical bar — applications received
+  const appsTitleEl = document.getElementById('apps-bar-chart-title');
+  if (appsTitleEl) appsTitleEl.textContent = `Applications Received — ${dimLabel}`;
+  createAppsBarChart('apps-bar-chart', rows);
+
+  // Stacked bar — accepted vs rejected
+  const stackedTitleEl = document.getElementById('stacked-chart-title');
+  if (stackedTitleEl) stackedTitleEl.textContent = `Accepted vs Rejected — ${dimLabel}`;
+  createStackedBarChart('stacked-bar-chart', rows);
 }
 
 // ── Severity helpers ───────────────────────────────────────────────────────────

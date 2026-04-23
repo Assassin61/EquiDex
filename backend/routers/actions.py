@@ -3,6 +3,7 @@ from backend.gemini import analyse_bias, generate_report, summarize_report
 from backend.stats import calculate_all_stats
 import json
 import datetime
+import traceback
 
 router = APIRouter(prefix="/action", tags=["Actions"])
 
@@ -17,7 +18,14 @@ async def analyse(audit_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Audit not found")
 
     stats = calculate_all_stats(records, config)
-    analysis = await analyse_bias(stats, config)
+
+    try:
+        analysis = await analyse_bias(stats, config)
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI call failed: {str(e)}")
 
     # Save to reports table
     db.save("reports", {
@@ -41,8 +49,15 @@ async def report(audit_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Audit not found")
 
     stats = calculate_all_stats(records, config)
-    analysis = await analyse_bias(stats, config)
-    formal_report = await generate_report(analysis, stats, config)
+
+    try:
+        analysis = await analyse_bias(stats, config)
+        formal_report = await generate_report(analysis, stats, config)
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI call failed: {str(e)}")
 
     # Update reports table
     existing = db.get_all("reports", audit_id)
@@ -70,9 +85,16 @@ async def summarize(audit_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Audit not found")
 
     stats = calculate_all_stats(records, config)
-    analysis = await analyse_bias(stats, config)
-    formal_report = await generate_report(analysis, stats, config)
-    summary = await summarize_report(formal_report, config)
+
+    try:
+        analysis = await analyse_bias(stats, config)
+        formal_report = await generate_report(analysis, stats, config)
+        summary = await summarize_report(formal_report, config)
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI call failed: {str(e)}")
 
     # Update reports table
     existing = db.get_all("reports", audit_id)

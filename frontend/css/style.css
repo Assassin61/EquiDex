@@ -1,4 +1,4 @@
-/* ── FairProbe Design System ────────────────────────────────────────────────── */
+/* ── EquiDex Design System ────────────────────────────────────────────────── */
 
 :root {
   --bg:          #0a0d14;
@@ -718,14 +718,14 @@ tr.row-low    td:last-child { color: var(--success); }
 }
 
 .chart-wrap--donut {
-  height: 220px;
+  height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .chart-wrap--bar {
-  height: 220px;
+  height: 300px;
 }
 
 /* Taller bar for stacked charts (history detail) */

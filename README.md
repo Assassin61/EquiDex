@@ -13,7 +13,7 @@ Built for the GDG PromptWars 2026 National Hackathon.
 
 ## The Problem
 
-Companies use AI to filter job applications, approve loans, and make medical decisions. These systems often discriminate silently — rejecting Mohammed Hassan and accepting James Smith with identical qualifications, purely based on name or ethnicity. Nobody notices because it happens automatically, at scale, with no paper trail.
+Companies use AI to filter job applications, approve loans, and make medical decisions. These systems often discriminate silently — with identical qualifications, purely based on name or ethnicity. Nobody notices because it happens automatically, at scale, with no paper trail.
 
 **EquiDex makes the invisible visible.**
 

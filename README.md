@@ -65,9 +65,9 @@ In our hiring AI demo, EquiDex detected:
 | Backend | FastAPI + Python 3.13 |
 | Database | SQLite (dev) / Firebase Firestore (prod) |
 | AI | Gemini 2.5 Flash |
-| Frontend | Vanilla JS + Chart.js 4.x |
+| Frontend | Vanilla JS + Chart.js 4.x + Tailwind CSS|
 | Config | `fairprobe.config.yaml` |
-| Frontend Hosting | Firebase Hosting / Vercel |
+| Frontend Hosting | Firebase Hosting |
 | Backend Hosting | Google Cloud Run |
 
 ---

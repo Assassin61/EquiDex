@@ -11,7 +11,7 @@ Built for the GDG PromptWars 2026 National Hackathon.
 ---
 **Status:** Fully functional · Backend + Frontend complete
 
-## The Problem
+## Problem Statement
 
 Companies use AI to filter job applications, approve loans, and make medical decisions. These systems often discriminate silently — with identical qualifications, purely based on name or ethnicity. Nobody notices because it happens automatically, at scale, with no paper trail.
 
@@ -252,26 +252,6 @@ Both Firebase Hosting and Vercel provide automatic TLS/HTTPS. Cloud Run also ser
 - **Adapter pattern** — swap SQLite for Firebase by changing one line in config
 - **On-demand AI calls only** — Gemini is called max 3 times per demo to conserve credits
 - **6 professional charts** — doughnut, horizontal bar, vertical bar, stacked bar, line, polar area
-
----
-
-### Complete ✓
-- [x] FastAPI backend with all endpoints
-- [x] Config-driven architecture
-- [x] Demo hiring AI with hidden bias
-- [x] Candidate generation (cached)
-- [x] SQLite database with full audit logging
-- [x] Bias statistics calculation
-- [x] Gemini integration (analyse, report, summarize)
-- [x] Adapter pattern (SQLite → Firebase swap)
-- [x] Frontend with 5 pages and 6 interactive charts
-- [x] Firebase Hosting configuration
-- [x] Vercel deployment configuration
-- [x] Deployment guide (DEPLOYMENT.md)
-
-## License
-
-MIT License — free to use, modify, and distribute.
 
 ---
 

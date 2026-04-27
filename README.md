@@ -275,4 +275,4 @@ MIT License — free to use, modify, and distribute.
 
 ---
 
-Built by Team Visionaries · GDG PromptWars 2026
+Built by Atharva from Team Visionaries · GDG PromptWars 2026

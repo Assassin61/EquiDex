@@ -41,23 +41,6 @@ Formal compliance report generated
 
 ---
 
-## Demo Results
-
-In our hiring AI demo, EquiDex detected:
-
-| Group | Acceptance Rate |
-|---|---|
-| Caucasian | 100% |
-| East Asian | 100% |
-| Hispanic | 25% |
-| South Asian | 21.9% |
-| African American | 21.9% |
-| Middle Eastern | 20.8% |
-
-**Caucasian candidates are accepted 4.8× more often than Middle Eastern candidates with identical qualifications.**
-
----
-
 ## Tech Stack
 
 | Layer | Technology |

@@ -122,8 +122,8 @@ equidex/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/Assassin61/Fairprobe.git
-cd Fairprobe
+git clone https://github.com/Assassin61/EquiDex.git
+cd EquiDex
 ```
 
 ### 2. Install dependencies
